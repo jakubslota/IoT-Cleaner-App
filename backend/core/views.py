@@ -1,13 +1,26 @@
+from django.db.models import OuterRef, Subquery, F, Q
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .models import Device, Telemetry
-from .serializers import DeviceListSerializers, DeviceDetailSerializer, TelemetryIngestSerializer
+from .serializers import DeviceListSerializer, DeviceDetailSerializer, TelemetryIngestSerializer
 
 class DeviceListView(generics.ListAPIView):
-    serializer_class = DeviceListSerializers
+    serializer_class = DeviceListSerializer
     def get_queryset(self):
         qs = Device.objects.all()
+         # --- ostatnia telemetria per urządzenie ---
+        last = Telemetry.objects.filter(device=OuterRef('pk')).order_by('-ts')
+        qs = qs.annotate(
+            last_level_pct=Subquery(last.values('level_pct')[:1]),
+            last_ts=Subquery(last.values('ts')[:1]),
+        )
+
+        # (opcjonalnie) filtry jak wcześniej:
+        q = self.request.query_params.get('q')
+        if q:
+            qs = qs.filter(Q(name__icontains=q) | Q(serial_number__icontains=q))
+
         bbox = self.request.query_params.get('bbox')
         if bbox:
             try:
@@ -15,6 +28,15 @@ class DeviceListView(generics.ListAPIView):
                 qs = qs.filter(lat__gte=minLat, lat__lte=maxLat, lng__gte=minLng, lng__lte=maxLng)
             except Exception:
                 pass
+
+        status = self.request.query_params.get('status')
+        if status:
+            qs = qs.filter(status=status)
+
+        low = self.request.query_params.get('low')
+        if low in ('1', 'true', 'True'):
+            qs = qs.filter(last_level_pct__lt=F('threshold_pct'))
+
         return qs
 
 class DeviceDetailView(generics.RetrieveAPIView):

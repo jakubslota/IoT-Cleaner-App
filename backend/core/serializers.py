@@ -2,9 +2,10 @@ from rest_framework import serializers
 from django.utils import timezone
 from .models import Device, Telemetry
 
-class DeviceListSerializers(serializers.ModelSerializer):
-    last_level_pct = serializers.SerializerMethodField()
-    last_ts = serializers.SerializerMethodField()
+# Lista urządzeń (mapa) – bez metod get_*, pola z adnotacji z querysetu
+class DeviceListSerializer(serializers.ModelSerializer):
+    last_level_pct = serializers.FloatField(read_only=True, allow_null=True)
+    last_ts = serializers.DateTimeField(read_only=True, allow_null=True)
 
     class Meta:
         model = Device
@@ -12,52 +13,35 @@ class DeviceListSerializers(serializers.ModelSerializer):
             'id',
             'serial_number',
             'name',
-            'latitude',
+            'latitude',          # UPEWNIJ SIĘ: w modelu są 'lat' i 'lng'
             'longitude',
             'status',
             'last_level_pct',
             'last_ts',
         )
 
-    def get_last_level_pct(self, obj):
-        t = obj.telemetry.order_by('-ts').first()
-        return t.last_level_pct if t else None
-
-    def get_last_ts(self, obj):
-        t = obj.telemetry.order_by('-ts').first()
-        return t.ts if t else None
-
+# Szczegóły urządzenia – metadane + ostatnie wartości (także z adnotacji)
 class DeviceDetailSerializer(serializers.ModelSerializer):
-    """Na ekran szczegółów: metadane + ostatnie wartości."""
-    last_level_pct = serializers.SerializerMethodField()
-    last_level_ml = serializers.SerializerMethodField()
-    last_ts = serializers.SerializerMethodField()
+    last_level_pct = serializers.FloatField(read_only=True, allow_null=True)
+    last_level_ml = serializers.FloatField(read_only=True, allow_null=True)
+    last_ts = serializers.DateTimeField(read_only=True, allow_null=True)
 
     class Meta:
         model = Device
         fields = (
-            'id', 'name', 'serial_number', 'lat', 'lng', 'status',
+            'id', 'name', 'serial_number', 'latitude', 'longitude', 'status',
             'capacity_ml', 'threshold_pct',
             'last_level_pct', 'last_level_ml', 'last_ts'
         )
 
-    def get_last_level_pct(self, obj):
-        t = obj.telemetry.order_by('-ts').first()
-        return t.level_pct if t else None
+# Do listowania telemetrii (GET /devices/{id}/telemetry)
+class TelemetrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Telemetry
+        fields = ('id', 'ts', 'level_pct', 'level_ml', 'temperature_c')
 
-    def get_last_level_ml(self, obj):
-        t = obj.telemetry.order_by('-ts').first()
-        return t.level_ml if t else None
-
-    def get_last_ts(self, obj):
-        t = obj.telemetry.order_by('-ts').first()
-        return t.ts if t else None
-
+# Do POST /api/telemetry – przyjmujemy serial zamiast UUID
 class TelemetryIngestSerializer(serializers.ModelSerializer):
-    """
-    Na POST /api/telemetry – przyjmujemy serial urządzenia,
-    a nie UUID. Tworzymy rekord Telemetry dla danego urządzenia.
-    """
     device_serial = serializers.CharField(write_only=True)
 
     class Meta:
@@ -65,9 +49,7 @@ class TelemetryIngestSerializer(serializers.ModelSerializer):
         fields = ('device_serial', 'ts', 'level_pct', 'level_ml', 'temperature_c')
 
     def validate_ts(self, value):
-        # Upewnij się, że jest „aware” (z timezone)
         if timezone.is_naive(value):
-            # jeśli dostaniesz naive, zamień na aware w UTC
             return timezone.make_aware(value, timezone=timezone.utc)
         return value
 
