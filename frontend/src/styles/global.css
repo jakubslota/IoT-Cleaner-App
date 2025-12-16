@@ -1,0 +1,24 @@
+/* Wysokość dla całej aplikacji */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+/* Proste zmienne kolorów/odcieni (na start) */
+:root{
+  --card-bg: #fff;
+  --card-shadow: 0 2px 6px rgba(0,0,0,.15);
+  --border: #eee;
+  --text-muted: #555;
+}
+
+/* Reset elementów formularzy – żeby wyglądały spójnie */
+input, select, button {
+  font: inherit;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+button {
+  cursor: pointer;
+}

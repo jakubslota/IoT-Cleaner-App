@@ -4,6 +4,7 @@ import type { DeviceListItem } from "./types/DeviceListItem";
 import type { DevicesQuery } from "./types/DevicesQuery";
 import MapView from "./components/MapView";
 import DevicePanel from "./components/DevicePanel";
+import styles from "./App.module.css";
 
 export default function App() {
 	const [devices, setDevices] = useState<DeviceListItem[]>([]);
@@ -45,38 +46,17 @@ export default function App() {
 	}, [q, status, bbox, tick]);
 
 	return (
-		<div
-			style={{
-				display: "grid",
-				gridTemplateColumns: "1fr 380px",
-				height: "100vh",
-			}}
-		>
-			<div style={{ position: "relative", height: "100%" }}>
-				<div
-					style={{
-						position: "absolute",
-						zIndex: 1000,
-						top: 12,
-						left: 12,
-						background: "#fff",
-						padding: 10,
-						borderRadius: 8,
-						boxShadow: "0 2px 6px rgba(0,0,0,.15)",
-						display: "flex",
-						gap: 8,
-					}}
-				>
+		<div className={styles.layout}>
+			<div className={styles.leftPane}>
+				<div className={styles.toolbar}>
 					<input
 						value={q}
 						onChange={(e) => setQ(e.target.value)}
 						placeholder="Szukaj po nazwie/SN"
-						style={{ padding: 6 }}
 					/>
 					<select
 						value={status}
 						onChange={(e) => setStatus(e.target.value)}
-						style={{ padding: 6 }}
 					>
 						<option value="">status: wszystkie</option>
 						<option value="ONLINE">ONLINE</option>

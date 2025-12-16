@@ -65,7 +65,7 @@ export default function MapView({
 
 	return (
 		<MapContainer
-			center={[52.1, 19.4]}
+			center={[52.1, 18.4]}
 			zoom={6}
 			style={{ height: "100%", width: "100%" }}
 		>
@@ -75,7 +75,7 @@ export default function MapView({
 			{devices.map((d) => (
 				<Marker
 					key={d.id}
-					position={[52.1, 19.4]}
+					position={[d.latitude, d.longitude]}
 					icon={pickIcon(d.last_level_pct, d.status)}
 					eventHandlers={{ click: () => onSelect(d.id) }}
 				>
@@ -84,10 +84,10 @@ export default function MapView({
 						<br />
 						SN: {d.serial_number}
 						<br />
-						Poziom: {d.last_level_pct ?? "-"}%<br />
+						Poziom: {d.last_level_pct ?? "-"}%
+						<br />
 						Status: {d.status}
 						<br />
-                        Popup
 					</Popup>
 				</Marker>
 			))}
