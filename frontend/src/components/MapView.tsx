@@ -67,6 +67,7 @@ export default function MapView({
 	return (
 		<div className={styles.mapWrapper}>
 		<MapContainer
+			className={styles.leafletHost}
 			center={[52.1, 18.4]}
 			zoom={6}
 		>
