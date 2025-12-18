@@ -58,7 +58,7 @@ export default function App() {
 						value={status}
 						onChange={(e) => setStatus(e.target.value)}
 					>
-						<option value="">status: wszystkie</option>
+						<option value="">STATUS: wszystkie</option>
 						<option value="ONLINE">ONLINE</option>
 						<option value="OFFLINE">OFFLINE</option>
 						<option value="MAINT">MAINT</option>
@@ -67,7 +67,7 @@ export default function App() {
 						onClick={() => setTick((t) => t + 1)}
 						disabled={loading}
 					>
-						{loading ? "..." : "Odśwież"}
+						{loading ? "..." : "ODŚWIEŻ"}
 					</button>
 				</div>
 				<MapView

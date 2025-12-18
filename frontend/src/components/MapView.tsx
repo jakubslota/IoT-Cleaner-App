@@ -7,6 +7,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import type { DeviceListItem } from "../types/DeviceListItem";
+import styles from "./MapView.module.css";
 
 function colorIcon(color: "green" | "yellow" | "red" | "gray") {
 	const svg = encodeURIComponent(
@@ -64,10 +65,10 @@ export default function MapView({
 	}
 
 	return (
+		<div className={styles.mapWrapper}>
 		<MapContainer
 			center={[52.1, 18.4]}
 			zoom={6}
-			style={{ height: "100%", width: "100%" }}
 		>
 			<TileLayer 
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
@@ -92,5 +93,6 @@ export default function MapView({
 				</Marker>
 			))}
 		</MapContainer>
+		</div>
 	);
 }

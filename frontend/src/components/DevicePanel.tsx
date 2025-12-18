@@ -9,7 +9,9 @@ import {
 	YAxis,
 	Tooltip,
 	CartesianGrid,
+	ResponsiveContainer,
 } from "recharts";
+import styles from "./DevicePanel.module.css";
 
 export default function DevicePanel({
 	id,
@@ -20,55 +22,46 @@ export default function DevicePanel({
 }) {
 	const [detail, setDetail] = useState<DeviceDetail | null>(null);
 	const [telemetry, setTelemetry] = useState<TelemetryPoint[]>([]);
-	useEffect(() => {
-		if (!id) return;
-		Promise.all([fetchDevice(id), fetchTelemetry(id, 120)]).then(
-			([d, t]) => {
-				setDetail(d);
-				setTelemetry([...t].reverse());
-			}
-		);
-	}, [id]);
 
-	if (!id) return null;
+	useEffect(() => {
+    if (!id) return;
+    let alive = true;
+    (async () => {
+      const [d, t] = await Promise.all([fetchDevice(id), fetchTelemetry(id, 120)]);
+      if (!alive) return;
+      setDetail(d);
+      setTelemetry([...t].reverse());
+    })();
+    return () => { alive = false; };
+  }, [id]);
+
+  if (!id) return null;
+
 	return (
-		<aside
-			style={{
-				width: 380,
-				padding: 16,
-				borderLeft: "1px solid #eee",
-				height: "100%",
-				overflow: "auto",
-				background: "#fff",
-			}}
-		>
-			<div
-				style={{
-					display: "flex",
-					justifyContent: "space-between",
-					alignItems: "center",
-				}}
-			>
-				<h3 style={{ margin: 0 }}>{detail?.name ?? "Urządzenie"}</h3>
-				<button onClick={onClose}>×</button>
+		<aside className={styles.panel}>
+			<div className={styles.header}>
+				<h3 className={styles.title}>{detail?.name ?? "Urządzenie"}</h3>
+				<button className={styles.closeBtn} onClick={onClose}>X</button>
 			</div>
 			{detail && (
 				<>
-					<p>
+					<p className={styles.meta}>
 						SN: {detail.serial_number}
 						<br />
 						Status: {detail.status}
 					</p>
-					<p>
+					<p className={styles.meta}>
 						Poj.: {detail.capacity_ml} ml, Próg:{" "}
 						{detail.threshold_pct}%
 					</p>
-					<p>
+					<p className={styles.meta}>
 						Ostatni poziom: {detail.last_level_pct ?? "—"}% (
 						{detail.last_level_ml ?? "—"} ml)
 					</p>
-					<h4>Poziom środka (ostatnie odczyty)</h4>
-					<LineChart width={340} height={200} data={telemetry}>
+					<h4 className={styles.sectionTitle}>Poziom środka (ostatnie odczyty)</h4>
+					<div className={styles.chartBox}>
+					<ResponsiveContainer>
+					<LineChart data={telemetry}>
 						<CartesianGrid strokeDasharray="3 3" />
 						<XAxis
 							dataKey="ts"
@@ -83,6 +76,8 @@ export default function DevicePanel({
 						/>
 						<Line type="monotone" dataKey="level_pct" dot={false} />
 					</LineChart>
+					</ResponsiveContainer>
+					</div>
 				</>
 			)}
 		</aside>
